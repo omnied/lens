@@ -21,11 +21,11 @@ import { withInjectables } from "@ogre-tools/injectable-react";
 import createInstallChartTabInjectable from "../dock/install-chart/create-install-chart-tab.injectable";
 import type { ShowCheckedErrorNotification } from "../notifications/show-checked-error.injectable";
 import type { SingleValue } from "react-select";
-import AbortController from "abort-controller";
 import showCheckedErrorNotificationInjectable from "../notifications/show-checked-error.injectable";
 import type { GetChartDetails } from "./get-char-details.injectable";
 import getChartDetailsInjectable from "./get-char-details.injectable";
 import { HelmChartIcon } from "./icon";
+import type { AbortSignal } from "node-fetch/externals";
 
 export interface HelmChartDetailsProps {
   chart: HelmChart;
@@ -105,7 +105,12 @@ class NonInjectedHelmChartDetails extends Component<HelmChartDetailsProps & Depe
       this.abortController.abort();
       this.abortController = new AbortController();
       const { chart: { name, repo }} = this.props;
-      const { readme } = await this.props.getChartDetails(repo, name, { version: chart.version, reqInit: { signal: this.abortController.signal }});
+      const { readme } = await this.props.getChartDetails(repo, name, {
+        version: chart.version,
+        reqInit: {
+          signal: this.abortController.signal as AbortSignal,
+        },
+      });
 
       this.readme.set(readme);
     } catch (error) {
