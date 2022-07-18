@@ -72,6 +72,8 @@ import { asyncComputed } from "@ogre-tools/injectable-react";
 import forceUpdateModalRootFrameComponentInjectable from "./application-update/force-update-modal/force-update-modal-root-frame-component.injectable";
 import legacyOnChannelListenInjectable from "./ipc/legacy-channel-listen.injectable";
 import getEntitySettingCommandsInjectable from "./components/command-palette/registered-commands/get-entity-setting-commands.injectable";
+import isProductionInjectable from "../common/vars/is-production.injectable";
+import isDebuggingInjectable from "../common/vars/is-debugging.injectable";
 
 export const getDiForUnitTesting = (opts: { doGeneralOverrides?: boolean } = {}) => {
   const {
@@ -204,6 +206,8 @@ export const getDiForUnitTesting = (opts: { doGeneralOverrides?: boolean } = {})
     overrideFsWithFakes(di);
 
     di.override(focusWindowInjectable, () => () => {});
+    di.override(isProductionInjectable, () => true);
+    di.override(isDebuggingInjectable, () => false);
 
     di.override(loggerInjectable, () => ({
       warn: noop,

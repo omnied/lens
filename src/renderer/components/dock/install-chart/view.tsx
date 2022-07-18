@@ -22,23 +22,24 @@ import type { SelectOption } from "../../select";
 import { Select } from "../../select";
 import { Input } from "../../input";
 import { EditorPanel } from "../editor-panel";
-import type { HelmReleaseCreatePayload, HelmReleaseUpdateDetails } from "../../../../common/k8s-api/endpoints/helm-releases.api";
 import { withInjectables } from "@ogre-tools/injectable-react";
 import installChartTabStoreInjectable from "./store.injectable";
 import dockStoreInjectable from "../dock/store.injectable";
-import createReleaseInjectable from "../../+helm-releases/create-release/create-release.injectable";
 import { Notifications } from "../../notifications";
 import type { NavigateToHelmReleases } from "../../../../common/front-end-routing/routes/cluster/helm/releases/navigate-to-helm-releases.injectable";
 import navigateToHelmReleasesInjectable from "../../../../common/front-end-routing/routes/cluster/helm/releases/navigate-to-helm-releases.injectable";
 import assert from "assert";
 import type { SingleValue } from "react-select";
+import type { CreateHelmRelease } from "../../../k8s/helm-releases.api/create.injectable";
+import type { HelmReleaseUpdateDetails } from "../../../k8s/helm-releases.api/update.injectable";
+import createHelmReleaseInjectable from "../../../k8s/helm-releases.api/create.injectable";
 
 export interface InstallCharProps {
   tab: DockTab;
 }
 
 interface Dependencies {
-  createRelease: (payload: HelmReleaseCreatePayload) => Promise<HelmReleaseUpdateDetails>;
+  createHelmRelease: CreateHelmRelease;
   installChartStore: InstallChartTabStore;
   dockStore: DockStore;
   navigateToHelmReleases: NavigateToHelmReleases;
@@ -116,7 +117,7 @@ class NonInjectedInstallChart extends Component<InstallCharProps & Dependencies>
   };
 
   install = async ({ repo, name, version, namespace, values = "", releaseName }: IChartInstallData) => {
-    const details = await this.props.createRelease({
+    const details = await this.props.createHelmRelease({
       name: releaseName || undefined,
       chart: name,
       repo,
@@ -237,16 +238,12 @@ class NonInjectedInstallChart extends Component<InstallCharProps & Dependencies>
   }
 }
 
-export const InstallChart = withInjectables<Dependencies, InstallCharProps>(
-  NonInjectedInstallChart,
-
-  {
-    getProps: (di, props) => ({
-      createRelease: di.inject(createReleaseInjectable),
-      installChartStore: di.inject(installChartTabStoreInjectable),
-      dockStore: di.inject(dockStoreInjectable),
-      navigateToHelmReleases: di.inject(navigateToHelmReleasesInjectable),
-      ...props,
-    }),
-  },
-);
+export const InstallChart = withInjectables<Dependencies, InstallCharProps>(NonInjectedInstallChart, {
+  getProps: (di, props) => ({
+    ...props,
+    createHelmRelease: di.inject(createHelmReleaseInjectable),
+    installChartStore: di.inject(installChartTabStoreInjectable),
+    dockStore: di.inject(dockStoreInjectable),
+    navigateToHelmReleases: di.inject(navigateToHelmReleasesInjectable),
+  }),
+});

@@ -9,7 +9,9 @@ import type { DiContainer } from "@ogre-tools/injectable";
 import type { RenderResult } from "@testing-library/react";
 import React from "react";
 import directoryForLensLocalStorageInjectable from "../../../common/directory-for-lens-local-storage/directory-for-lens-local-storage.injectable";
-import { HelmChart } from "../../../common/k8s-api/endpoints/helm-charts.api";
+import { HelmChart } from "../../k8s/helm-chart";
+import type { GetHelmChartDetails } from "../../k8s/helm-charts.api/get-details.injectable";
+import getHelmChartDetailsInjectable from "../../k8s/helm-charts.api/get-details.injectable";
 import { getDiForUnitTesting } from "../../getDiForUnitTesting";
 import { noop } from "../../utils";
 import type { CreateInstallChartTab } from "../dock/install-chart/create-install-chart-tab.injectable";
@@ -17,13 +19,11 @@ import createInstallChartTabInjectable from "../dock/install-chart/create-instal
 import { Notifications } from "../notifications";
 import type { DiRender } from "../test-utils/renderFor";
 import { renderFor } from "../test-utils/renderFor";
-import type { GetChartDetails } from "./get-char-details.injectable";
-import getChartDetailsInjectable from "./get-char-details.injectable";
 import { HelmChartDetails } from "./helm-chart-details";
 
 describe("<HelmChartDetails />", () => {
   let di: DiContainer;
-  let getChartDetails: AsyncFnMock<GetChartDetails>;
+  let getChartDetails: AsyncFnMock<GetHelmChartDetails>;
   let chart: HelmChart;
   let render: DiRender;
   let result: RenderResult;
@@ -31,7 +31,7 @@ describe("<HelmChartDetails />", () => {
 
   beforeEach(() => {
     di = getDiForUnitTesting({ doGeneralOverrides: true });
-    getChartDetails = asyncFn<GetChartDetails>();
+    getChartDetails = asyncFn();
     createInstallChartTab = jest.fn();
     chart = HelmChart.create({
       apiVersion: "some-api-version",
@@ -42,7 +42,7 @@ describe("<HelmChartDetails />", () => {
     });
 
     di.override(directoryForLensLocalStorageInjectable, () => "some-directory-for-lens-local-storage");
-    di.override(getChartDetailsInjectable, () => getChartDetails);
+    di.override(getHelmChartDetailsInjectable, () => getChartDetails);
     di.override(createInstallChartTabInjectable, () => createInstallChartTab);
     render = renderFor(di);
     result = render((

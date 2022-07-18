@@ -7,9 +7,10 @@ import { action, makeObservable } from "mobx";
 import type { TabId } from "../dock/store";
 import type { DockTabStoreDependencies } from "../dock-tab-store/dock-tab.store";
 import { DockTabStore } from "../dock-tab-store/dock-tab.store";
-import { getChartDetails, getChartValues } from "../../../../common/k8s-api/endpoints/helm-charts.api";
-import type { HelmReleaseUpdateDetails } from "../../../../common/k8s-api/endpoints/helm-releases.api";
 import { waitUntilDefined } from "../../../../common/utils/wait";
+import type { GetHelmChartDetails } from "../../../k8s/helm-charts.api/get-details.injectable";
+import type { GetHelmChartValues } from "../../../k8s/helm-charts.api/get-values.injectable";
+import type { HelmReleaseUpdateDetails } from "../../../k8s/helm-releases.api/update.injectable";
 
 export interface IChartInstallData {
   name: string;
@@ -25,6 +26,8 @@ export interface IChartInstallData {
 export interface InstallChartTabStoreDependencies extends DockTabStoreDependencies {
   versionsStore: DockTabStore<string[]>;
   detailsStore: DockTabStore<HelmReleaseUpdateDetails>;
+  getHelmChartDetails: GetHelmChartDetails;
+  getHelmChartValues: GetHelmChartValues;
 }
 
 export class InstallChartTabStore extends DockTabStore<IChartInstallData> {
@@ -60,7 +63,7 @@ export class InstallChartTabStore extends DockTabStore<IChartInstallData> {
   @action
   private async loadVersions(tabId: TabId, { repo, name, version }: IChartInstallData) {
     this.versions.clearData(tabId); // reset
-    const charts = await getChartDetails(repo, name, { version });
+    const charts = await this.dependencies.getHelmChartDetails(repo, name, { version });
     const versions = charts.versions.map(chartVersion => chartVersion.version);
 
     this.versions.setData(tabId, versions);
@@ -70,7 +73,7 @@ export class InstallChartTabStore extends DockTabStore<IChartInstallData> {
   async loadValues(tabId: TabId, attempt = 0): Promise<void> {
     const data = await waitUntilDefined(() => this.getData(tabId));
     const { repo, name, version } = data;
-    const values = await getChartValues(repo, name, version);
+    const values = await this.dependencies.getHelmChartValues(repo, name, version);
 
     if (values) {
       this.setData(tabId, { ...data, values });

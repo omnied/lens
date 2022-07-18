@@ -6,7 +6,7 @@
 import "./helm-chart-details.scss";
 
 import React, { Component } from "react";
-import type { HelmChart } from "../../../common/k8s-api/endpoints/helm-charts.api";
+import type { HelmChart } from "../../k8s/helm-chart";
 import { computed, observable, reaction, runInAction } from "mobx";
 import { disposeOnUnmount, observer } from "mobx-react";
 import { Drawer, DrawerItem } from "../drawer";
@@ -23,9 +23,9 @@ import type { ShowCheckedErrorNotification } from "../notifications/show-checked
 import type { SingleValue } from "react-select";
 import AbortController from "abort-controller";
 import showCheckedErrorNotificationInjectable from "../notifications/show-checked-error.injectable";
-import type { GetChartDetails } from "./get-char-details.injectable";
-import getChartDetailsInjectable from "./get-char-details.injectable";
 import { HelmChartIcon } from "./icon";
+import type { GetHelmChartDetails } from "../../k8s/helm-charts.api/get-details.injectable";
+import getHelmChartDetailsInjectable from "../../k8s/helm-charts.api/get-details.injectable";
 
 export interface HelmChartDetailsProps {
   chart: HelmChart;
@@ -41,7 +41,7 @@ const LargeTooltip = withStyles({
 interface Dependencies {
   createInstallChartTab: (helmChart: HelmChart) => void;
   showCheckedErrorNotification: ShowCheckedErrorNotification;
-  getChartDetails: GetChartDetails;
+  getChartDetails: GetHelmChartDetails;
 }
 
 @observer
@@ -240,6 +240,6 @@ export const HelmChartDetails = withInjectables<Dependencies, HelmChartDetailsPr
     ...props,
     createInstallChartTab: di.inject(createInstallChartTabInjectable),
     showCheckedErrorNotification: di.inject(showCheckedErrorNotificationInjectable),
-    getChartDetails: di.inject(getChartDetailsInjectable),
+    getChartDetails: di.inject(getHelmChartDetailsInjectable),
   }),
 });

@@ -7,8 +7,7 @@ import "./helm-charts.scss";
 
 import React, { Component } from "react";
 import { observer } from "mobx-react";
-import { helmChartStore } from "./helm-chart.store";
-import type { HelmChart } from "../../../common/k8s-api/endpoints/helm-charts.api";
+import type { HelmChart } from "../../k8s/helm-chart";
 import { HelmChartDetails } from "./helm-chart-details";
 import { ItemListLayout } from "../item-object-list/list-layout";
 import type { IComputedValue } from "mobx";
@@ -18,6 +17,8 @@ import helmChartsRouteParametersInjectable from "./helm-charts-route-parameters.
 import type { NavigateToHelmCharts } from "../../../common/front-end-routing/routes/cluster/helm/charts/navigate-to-helm-charts.injectable";
 import navigateToHelmChartsInjectable from "../../../common/front-end-routing/routes/cluster/helm/charts/navigate-to-helm-charts.injectable";
 import { HelmChartIcon } from "./icon";
+import type { HelmChartStore } from "./store";
+import helmChartStoreInjectable from "./store.injectable";
 
 enum columnId {
   name = "name",
@@ -32,14 +33,14 @@ interface Dependencies {
     chartName: IComputedValue<string>;
     repo: IComputedValue<string>;
   };
-
+  helmChartStore: HelmChartStore;
   navigateToHelmCharts: NavigateToHelmCharts;
 }
 
 @observer
 class NonInjectedHelmCharts extends Component<Dependencies> {
   componentDidMount() {
-    helmChartStore.loadAll();
+    this.props.helmChartStore.loadAll();
   }
 
   get selectedChart() {
@@ -50,7 +51,7 @@ class NonInjectedHelmCharts extends Component<Dependencies> {
       return undefined;
     }
 
-    return helmChartStore.getByName(chartName, repo);
+    return this.props.helmChartStore.getByName(chartName, repo);
   }
 
   onDetails = (chart: HelmChart) => {
@@ -86,8 +87,8 @@ class NonInjectedHelmCharts extends Component<Dependencies> {
           isConfigurable
           tableId="helm_charts"
           className="HelmCharts"
-          store={helmChartStore}
-          getItems={() => helmChartStore.items}
+          store={this.props.helmChartStore}
+          getItems={() => this.props.helmChartStore.items}
           isSelectable={false}
           sortingCallbacks={{
             [columnId.name]: chart => chart.getName(),
@@ -138,14 +139,11 @@ class NonInjectedHelmCharts extends Component<Dependencies> {
   }
 }
 
-export const HelmCharts = withInjectables<Dependencies>(
-  NonInjectedHelmCharts,
-
-  {
-    getProps: (di) => ({
-      routeParameters: di.inject(helmChartsRouteParametersInjectable),
-      navigateToHelmCharts: di.inject(navigateToHelmChartsInjectable),
-    }),
-  },
-);
+export const HelmCharts = withInjectables<Dependencies>(NonInjectedHelmCharts, {
+  getProps: (di) => ({
+    routeParameters: di.inject(helmChartsRouteParametersInjectable),
+    navigateToHelmCharts: di.inject(navigateToHelmChartsInjectable),
+    helmChartStore: di.inject(helmChartStoreInjectable),
+  }),
+});
 
